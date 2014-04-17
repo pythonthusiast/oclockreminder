@@ -84,6 +84,7 @@ class SysTrayIcon(object):
     def _add_ids_to_menu_options(self, menu_options):
         result = []
         for menu_option in menu_options:
+            print menu_option
             option_text, option_icon, option_action = menu_option
             if callable(option_action) or option_action in self.SPECIAL_ACTIONS:
                 self.menu_actions_by_id.add((self._next_action_id, option_action))
