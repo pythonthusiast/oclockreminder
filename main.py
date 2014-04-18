@@ -6,33 +6,43 @@ import datetime
 import threading
 
 class MsAgent(object):
+    '''
+    Construct an MS Agent object, display it and let it says the time exactly every hour
+    '''
     def __init__(self):
-        self.ag=win32com.client.Dispatch('Agent.Control')
-        self.ag.Connected=1
-        self.ag.Characters.Load('James')
+        self.agent=win32com.client.Dispatch('Agent.Control')
+        self.charId = 'James'
+        self.agent.Connected=1
+        self.agent.Characters.Load(self.charId)
 
     def say_the_time(self, sysTrayIcon):
-        try:
-            self.ag.Connected=1
-            self.ag.Characters.Load('James')
-        except Exception as ex:
-            pass
+        '''
+        Speak up the time!
+        '''
         now = datetime.datetime.now()
         str_now = '%s:%s:%s' % (now.hour, now.minute, now.second)
-        self.ag.Characters('James').Show()
-        self.ag.Characters('James').Speak('The time is %s' % str_now)
-        self.ag.Characters('James').Hide()
+        self.agent.Characters(self.charId).Show()
+        self.agent.Characters(self.charId).Speak('The time is %s' % str_now)
+        self.agent.Characters(self.charId).Hide()
 
     def bye(self, sysTrayIcon):
-        self.ag.Characters.Unload('James')
+        '''
+        Unload msagent object from memory
+        '''
+
+        self.agent.Characters.Unload(self.charId)
+        self.thread.cancel()
 
     def wakeup_next_hour(self):
+        '''
+        Run a thread that will wake up exactly n-o'clock
+        '''
         now = datetime.datetime.now()
         next_hour = now + datetime.timedelta(hours = 1)
         next_hour_oclock = datetime.datetime(next_hour.year, next_hour.month, next_hour.day, next_hour.hour, 0, 0)
         seconds = next_hour_oclock - now
-        t = threading.Timer(seconds.total_seconds(), self.say_the_time)
-        t.start()
+        self.thread = threading.Timer(seconds.total_seconds(), self.say_the_time)
+        self.thread.start()
 
 if __name__ == '__main__':
     import itertools, glob
