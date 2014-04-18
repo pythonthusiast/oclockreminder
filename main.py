@@ -22,8 +22,7 @@ def say_the_time(sysTrayIcon):
     ag.Characters('James').Hide()
 
 def bye(sysTrayIcon):
-    ag.Characters("James").Hide()
-    
+    ag.Characters.Unload('James')
 
 def wakeup_next_hour():
     now = datetime.datetime.now()
