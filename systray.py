@@ -79,7 +79,7 @@ class SysTrayIcon(object):
         self.notify_id = None
         self.refresh_icon()
         
-        win32gui.PumpMessages()
+
 
     def _add_ids_to_menu_options(self, menu_options):
         result = []
@@ -209,7 +209,11 @@ class SysTrayIcon(object):
             win32gui.DestroyWindow(self.hwnd)
         else:
             menu_action(self)
-            
+
+    def pumpMessage(self):
+        win32gui.PumpMessages()
+
+
 def non_string_iterable(obj):
     try:
         iter(obj)
