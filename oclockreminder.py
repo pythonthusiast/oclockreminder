@@ -31,7 +31,6 @@ class MsAgent(object):
         '''
 
         self.agent.Characters.Unload(self.charId)
-        self.thread.cancel()
 
 if __name__ == '__main__':
     import itertools, glob
