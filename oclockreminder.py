@@ -4,52 +4,69 @@ import systray
 import win32com.client
 import datetime
 import threading
+import sys
+sys.coinit_flags = 0
 import pythoncom
+from pythoncom import CoInitializeEx, CoUninitialize, COINIT_MULTITHREADED
 
-class MsAgent(object):
+#class MsAgent(object):
+'''
+Construct an MS Agent object, display it and let it says the time exactly every hour
+'''
+#    def __init__(self):
+#agent=win32com.client.Dispatch('Agent.Control')
+#charId = 'James'
+#agent.Connected=1
+#agent.Characters.Load(charId)
+#print agent
+#thread = None
+
+
+def say_the_time(sysTrayIcon):
     '''
-    Construct an MS Agent object, display it and let it says the time exactly every hour
+    Speak up the time!
     '''
-    def __init__(self):
-        self.agent=win32com.client.Dispatch('Agent.Control')
-        self.charId = 'James'
-        self.agent.Connected=1
-        self.agent.Characters.Load(self.charId)
+    CoInitializeEx(COINIT_MULTITHREADED)
+    agent = win32com.client.Dispatch('Agent.Control')
+    charId = 'James'
+    agent.Connected=1
+    try:
+        agent.Characters.Load(charId)
+    except Exception as ex:
+        print ex
 
-    def say_the_time(self, sysTrayIcon):
-        '''
-        Speak up the time!
-        '''
-        pythoncom.CoCreateInstance()
-        self.agent=win32com.client.Dispatch('Agent.Control')
-        self.charId = 'James'
-        self.agent.Connected=1
-        self.agent.Characters.Load(self.charId)
+    now = datetime.datetime.now()
+    str_now = '%s:%s:%s' % (now.hour, now.minute, now.second)
+    agent.Characters(charId).Show()
+    print 'Speak up!'
+    speak = agent.Characters(charId).Speak('The time is %s' % str_now)
+    print speak.Status
+    while speak.Status != 0:
+        pass
+    hide = agent.Characters(charId).Hide()
 
-        now = datetime.datetime.now()
-        str_now = '%s:%s:%s' % (now.hour, now.minute, now.second)
-        self.agent.Characters(self.charId).Show()
-        self.agent.Characters(self.charId).Speak('The time is %s' % str_now)
-        self.agent.Characters(self.charId).Hide()
+    while hide.Status != 0:
+        pass
+    agent.Characters.Unload(charId)
 
-    def bye(self, sysTrayIcon):
-        '''
-        Unload msagent object from memory
-        '''
+def bye(sysTrayIcon):
+    '''
+    Unload msagent object from memory
+    '''
 
-        self.agent.Characters.Unload(self.charId)
-        self.thread.cancel()
+    #agent.Characters.Unload(charId)
+    #thread.cancel()
 
-    def wakeup_next_hour(self, sysTrayIcon):
-        '''
-        Run a thread that will wake up exactly n-o'clock
-        '''
-        now = datetime.datetime.now()
-        next_hour = now + datetime.timedelta(seconds = 5)
-        next_hour_oclock = datetime.datetime(next_hour.year, next_hour.month, next_hour.day, next_hour.hour, next_hour.minute, next_hour.second )#0, 0)
-        seconds = next_hour_oclock - now
-        self.thread = threading.Timer(seconds.total_seconds(), self.say_the_time, [sysTrayIcon])
-        self.thread.start()
+def wakeup_next_hour(sysTrayIcon):
+    '''
+    Run a thread that will wake up exactly n-o'clock
+    '''
+    now = datetime.datetime.now()
+    next_hour = now + datetime.timedelta(seconds = 5)
+    next_hour_oclock = datetime.datetime(next_hour.year, next_hour.month, next_hour.day, next_hour.hour, next_hour.minute, next_hour.second )#0, 0)
+    seconds = next_hour_oclock - now
+    thread = threading.Timer(seconds.total_seconds(), say_the_time, [sysTrayIcon])
+    thread.start()
 
 if __name__ == '__main__':
     import itertools, glob
@@ -57,9 +74,9 @@ if __name__ == '__main__':
     icons = itertools.cycle(glob.glob('*.ico'))
     hover_text = "What can I do for you Sir?"
 
-    agent = MsAgent()
-    menu_options = (('Say the time', icons.next(), agent.say_the_time),)
+    #agent = MsAgent()
+    menu_options = (('Say the time', icons.next(), say_the_time),)
 
-    trayApp = systray.SysTrayIcon(icons.next(), hover_text, menu_options, on_quit=agent.bye, default_menu_index=1)
-    agent.wakeup_next_hour(trayApp)
+    trayApp = systray.SysTrayIcon(icons.next(), hover_text, menu_options, on_quit=bye, default_menu_index=1)
+    wakeup_next_hour(trayApp)
     trayApp.pumpMessage()
