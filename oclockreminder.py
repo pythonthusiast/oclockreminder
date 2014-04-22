@@ -20,15 +20,24 @@ class MsAgent(object):
         '''
         Speak up the time!
         '''
-        
+        CoInitializeEx(COINIT_MULTITHREADED)
+        agent = win32com.client.Dispatch('Agent.Control')
+        charId = 'James'
+        agent.Connected=1
+        try:
+            agent.Characters.Load(charId)
+        except Exception as ex:
+            print ex
+
         now = datetime.datetime.now()
         str_now = '%s:%s:%s' % (now.hour, now.minute, now.second)
-        self.agent.Characters(self.charId).Show()
-        self.agent.Characters(self.charId).Speak('The time is %s' % str_now)
+        agent.Characters(charId).Show()
+        print 'Speak up!'
+        speak = agent.Characters(charId).Speak('The time is %s' % str_now)
         time.sleep(3)
-        self.agent.Characters(self.charId).Hide()
+        hide = agent.Characters(charId).Hide()
         time.sleep(5)
-        self.agent.Characters.Unload(self.charId)
+        agent.Characters.Unload(charId)
 
     def wakeup_next_hour(self):
         '''
