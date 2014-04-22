@@ -5,22 +5,21 @@ import win32com.client
 import datetime
 import threading
 import time
+import pythoncom
+import humanfriendly
 
 class MsAgent(object):
     '''
     Construct an MS Agent object, display it and let it says the time exactly every hour
     '''
     def __init__(self):
-        self.agent=win32com.client.Dispatch('Agent.Control')
         self.charId = 'James'
-        self.agent.Connected=1
-        self.agent.Characters.Load(self.charId)
 
     def say_the_time(self, sysTrayIcon):
         '''
         Speak up the time!
         '''
-        CoInitializeEx(COINIT_MULTITHREADED)
+        pythoncom.CoInitialize()
         agent = win32com.client.Dispatch('Agent.Control')
         charId = 'James'
         agent.Connected=1
@@ -32,34 +31,37 @@ class MsAgent(object):
         now = datetime.datetime.now()
         str_now = '%s:%s:%s' % (now.hour, now.minute, now.second)
         agent.Characters(charId).Show()
-        print 'Speak up!'
-        speak = agent.Characters(charId).Speak('The time is %s' % str_now)
+        agent.Characters(charId).Speak('The time is %s' % str_now)
         time.sleep(3)
-        hide = agent.Characters(charId).Hide()
+        agent.Characters(charId).Hide()
         time.sleep(5)
         agent.Characters.Unload(charId)
+        pythoncom.CoUninitialize()
 
     def wakeup_next_hour(self):
         '''
         Run a thread that will wake up exactly n-o'clock
         '''
         now = datetime.datetime.now()
-        next_hour = now + datetime.timedelta(seconds = 3)
+        next_hour = now + datetime.timedelta(hours = 1)
         next_hour_oclock = datetime.datetime(next_hour.year, next_hour.month, next_hour.day, next_hour.hour, next_hour.minute, next_hour.second )#0, 0)
         seconds = next_hour_oclock - now
-        thread = threading.Timer(seconds.total_seconds(), self.say_the_time_hourly)
-        thread.start()
+        self.thread = threading.Timer(seconds.total_seconds(), self.say_the_time_hourly)
+        self.thread.start()
 
     def say_the_time_hourly(self):
+        '''
+        say the time and then schedule for another hour at exactly o'clock
+        '''
         self.say_the_time(None)
         self.wakeup_next_hour()
 
     def bye(self, sysTrayIcon):
         '''
-        Unload msagent object from memory
+        Stop any running thread, if any
         '''
-        self.agent.Characters.Unload(self.charId)
-        self.thread.cancel()
+        if hasattr(self,'thread'):
+            self.thread.cancel()
 
 if __name__ == '__main__':
     import itertools, glob
