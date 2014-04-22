@@ -5,6 +5,8 @@ import win32com.client
 import datetime
 import threading
 import sys
+import time
+
 sys.coinit_flags = 0
 import pythoncom
 from pythoncom import CoInitializeEx, CoUninitialize, COINIT_MULTITHREADED
@@ -21,6 +23,8 @@ Construct an MS Agent object, display it and let it says the time exactly every 
 #print agent
 #thread = None
 
+def say_the_time_hourly():
+    say_the_time()
 
 def say_the_time(sysTrayIcon):
     '''
@@ -40,13 +44,9 @@ def say_the_time(sysTrayIcon):
     agent.Characters(charId).Show()
     print 'Speak up!'
     speak = agent.Characters(charId).Speak('The time is %s' % str_now)
-    print speak.Status
-    while speak.Status != 0:
-        pass
+    time.sleep(3)
     hide = agent.Characters(charId).Hide()
-
-    while hide.Status != 0:
-        pass
+    time.sleep(5)
     agent.Characters.Unload(charId)
 
 def bye(sysTrayIcon):
@@ -62,10 +62,10 @@ def wakeup_next_hour(sysTrayIcon):
     Run a thread that will wake up exactly n-o'clock
     '''
     now = datetime.datetime.now()
-    next_hour = now + datetime.timedelta(seconds = 5)
+    next_hour = now + datetime.timedelta(seconds = 3)
     next_hour_oclock = datetime.datetime(next_hour.year, next_hour.month, next_hour.day, next_hour.hour, next_hour.minute, next_hour.second )#0, 0)
     seconds = next_hour_oclock - now
-    thread = threading.Timer(seconds.total_seconds(), say_the_time, [sysTrayIcon])
+    thread = threading.Timer(seconds.total_seconds(), say_the_time_hourly, [sysTrayIcon])
     thread.start()
 
 if __name__ == '__main__':
