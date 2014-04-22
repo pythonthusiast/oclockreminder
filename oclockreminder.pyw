@@ -6,7 +6,6 @@ import datetime
 import threading
 import time
 import pythoncom
-import humanfriendly
 
 class MsAgent(object):
     '''
@@ -44,7 +43,7 @@ class MsAgent(object):
         '''
         now = datetime.datetime.now()
         next_hour = now + datetime.timedelta(hours = 1)
-        next_hour_oclock = datetime.datetime(next_hour.year, next_hour.month, next_hour.day, next_hour.hour, next_hour.minute, next_hour.second )#0, 0)
+        next_hour_oclock = datetime.datetime(next_hour.year, next_hour.month, next_hour.day, next_hour.hour, 0, 0)
         seconds = next_hour_oclock - now
         self.thread = threading.Timer(seconds.total_seconds(), self.say_the_time_hourly)
         self.thread.start()
