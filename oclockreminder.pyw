@@ -55,7 +55,7 @@ class MsAgent(object):
 
     def say_the_time_hourly(self):
         '''
-        say the time and then schedule for another hour at exactly o'clock
+        say the time and then schedule for another hour at exactly n-th o'clock
         '''
         self.say_the_time(None)
         self.wakeup_next_hour()
