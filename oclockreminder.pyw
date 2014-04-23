@@ -4,54 +4,37 @@ import systray
 import win32com.client
 import datetime
 import threading
-import time
-import pythoncom
 
 class MsAgent(object):
     '''
     Construct an MS Agent object, display it and let it says the time exactly every hour
     '''
     def __init__(self):
+        self.agent=win32com.client.Dispatch('Agent.Control')
         self.charId = 'James'
-
-    def say_the_time(self, sysTrayIcon):
-        '''
-        Speak up the time!
-        '''
-        pythoncom.CoInitialize()
-        agent = win32com.client.Dispatch('Agent.Control')
-        charId = 'James'
-        agent.Connected=1
-        try:
-            agent.Characters.Load(charId)
-        except Exception as ex:
-            print ex
-
-        now = datetime.datetime.now()
-
-        if now.hour == 0 and now.minute == 0:
-            str_now = ' exactly %s o''clock' % now.hour
-        else:
-            str_now = '%s:%s:%s' % (now.hour, now.minute, now.second)
-        agent.Characters(charId).Show()
-
-        agent.Characters(charId).Speak('The time is %s' % str_now)
-        time.sleep(3)
-        agent.Characters(charId).Hide()
-        time.sleep(5)
-        agent.Characters.Unload(charId)
-        pythoncom.CoUninitialize()
+        self.agent.Connected=1
+        self.agent.Characters.Load(self.charId)
 
     def wakeup_next_hour(self):
         '''
         Run a thread that will wake up exactly n-o'clock
         '''
         now = datetime.datetime.now()
-        next_hour = now + datetime.timedelta(hours = 1)
-        next_hour_oclock = datetime.datetime(next_hour.year, next_hour.month, next_hour.day, next_hour.hour, 0, 0)
+        next_hour = now + datetime.timedelta(seconds = 2)
+        next_hour_oclock = datetime.datetime(next_hour.year, next_hour.month, next_hour.day, next_hour.hour, next_hour.minute, next_hour.second)
         seconds = next_hour_oclock - now
         self.thread = threading.Timer(seconds.total_seconds(), self.say_the_time_hourly)
         self.thread.start()
+
+    def say_the_time(self, sysTrayIcon):
+        '''
+        Speak up the time!
+        '''
+        now = datetime.datetime.now()
+        str_now = '%s:%s:%s' % (now.hour, now.minute, now.second)
+        self.agent.Characters(self.charId).Show()
+        self.agent.Characters(self.charId).Speak('The time is %s' % str_now)
+        self.agent.Characters(self.charId).Hide()
 
     def say_the_time_hourly(self):
         '''
@@ -62,10 +45,10 @@ class MsAgent(object):
 
     def bye(self, sysTrayIcon):
         '''
-        Stop any running thread, if any
+        Unload msagent object from memory
         '''
-        if hasattr(self,'thread'):
-            self.thread.cancel()
+
+        self.agent.Characters.Unload(self.charId)
 
 if __name__ == '__main__':
     import itertools, glob
@@ -75,6 +58,5 @@ if __name__ == '__main__':
 
     agent = MsAgent()
     menu_options = (('Say the time', icons.next(), agent.say_the_time),)
-
     agent.wakeup_next_hour()
     systray.SysTrayIcon(icons.next(), hover_text, menu_options, on_quit=agent.bye, default_menu_index=1)
