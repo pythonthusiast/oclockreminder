@@ -28,8 +28,13 @@ class MsAgent(object):
             print ex
 
         now = datetime.datetime.now()
-        str_now = '%s:%s:%s' % (now.hour, now.minute, now.second)
+
+        if now.hour == 0 and now.minute == 0:
+            str_now = ' exactly %s o''clock' % now.hour
+        else:
+            str_now = '%s:%s:%s' % (now.hour, now.minute, now.second)
         agent.Characters(charId).Show()
+
         agent.Characters(charId).Speak('The time is %s' % str_now)
         time.sleep(3)
         agent.Characters(charId).Hide()
